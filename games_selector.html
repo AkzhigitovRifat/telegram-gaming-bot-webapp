@@ -111,9 +111,23 @@
             color: var(--tg-theme-hint-color, #999);
             font-size: 16px;
         }
+        
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px;
+            font-size: 10px;
+            border-radius: 3px;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
+    <div class="debug-info" id="debugInfo">Загрузка...</div>
+    
     <div class="header">Выбери свои игры</div>
     
     <div class="search-container">
@@ -173,9 +187,16 @@
             "Red Dead Redemption 2",
             "The Witcher 3",
             "Elden Ring"
-        ].sort(); // Сортируем по алфавиту
+        ].sort();
         
         let selectedGames = [];
+        
+        // Отладочная функция
+        function updateDebugInfo(message) {
+            const debugEl = document.getElementById('debugInfo');
+            debugEl.textContent = message;
+            console.log('DEBUG:', message);
+        }
         
         function renderGames(gamesToRender = allGames) {
             const gamesList = document.getElementById('gamesList');
@@ -196,7 +217,8 @@
                     <span class="game-name">${gameName}</span>
                 `;
                 
-                gameItem.addEventListener('click', () => {
+                gameItem.addEventListener('click', (e) => {
+                    e.preventDefault();
                     toggleGame(gameName);
                 });
                 
@@ -210,8 +232,10 @@
             const index = selectedGames.indexOf(gameName);
             if (index >= 0) {
                 selectedGames.splice(index, 1);
+                updateDebugInfo(`Убрана игра: ${gameName}`);
             } else {
                 selectedGames.push(gameName);
+                updateDebugInfo(`Добавлена игра: ${gameName}`);
             }
             renderGames(getCurrentFilteredGames());
         }
@@ -229,11 +253,14 @@
             
             if (selectedGames.length > 0) {
                 counter.style.display = 'block';
-                // Обновляем текст кнопки
-                Telegram.WebApp.MainButton.text = `Готово (${selectedGames.length})`;
+                if (typeof Telegram !== 'undefined' && Telegram.WebApp && Telegram.WebApp.MainButton) {
+                    Telegram.WebApp.MainButton.text = `Готово (${selectedGames.length})`;
+                }
             } else {
                 counter.style.display = 'none';
-                Telegram.WebApp.MainButton.text = "Выберите игры";
+                if (typeof Telegram !== 'undefined' && Telegram.WebApp && Telegram.WebApp.MainButton) {
+                    Telegram.WebApp.MainButton.text = "Выберите игры";
+                }
             }
         }
         
@@ -241,31 +268,65 @@
         document.getElementById('searchInput').addEventListener('input', (e) => {
             const filtered = getCurrentFilteredGames();
             renderGames(filtered);
+            updateDebugInfo(`Поиск: ${e.target.value}, найдено: ${filtered.length}`);
         });
         
-        // Инициализация Telegram Web App
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
-        
-        // Настройка главной кнопки
-        Telegram.WebApp.MainButton.text = "Выберите игры";
-        Telegram.WebApp.MainButton.show();
-        
-        Telegram.WebApp.MainButton.onClick(() => {
-            if (selectedGames.length > 0) {
-                // Отправляем данные и закрываем
-                Telegram.WebApp.sendData(JSON.stringify({
-                    type: "games_selected",
-                    games: selectedGames
-                }));
-                Telegram.WebApp.close();
+        // Проверяем доступность Telegram WebApp
+        if (typeof Telegram === 'undefined') {
+            updateDebugInfo('Telegram WebApp недоступен');
+        } else {
+            updateDebugInfo('Telegram WebApp найден');
+            
+            // Инициализация Telegram Web App
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
+            
+            updateDebugInfo('WebApp инициализирован');
+            
+            // Настройка главной кнопки
+            if (Telegram.WebApp.MainButton) {
+                Telegram.WebApp.MainButton.text = "Выберите игры";
+                Telegram.WebApp.MainButton.show();
+                updateDebugInfo('Кнопка настроена');
+                
+                Telegram.WebApp.MainButton.onClick(() => {
+                    updateDebugInfo('Кнопка нажата');
+                    
+                    if (selectedGames.length > 0) {
+                        const dataToSend = {
+                            type: "games_selected",
+                            games: selectedGames
+                        };
+                        
+                        updateDebugInfo(`Отправка: ${selectedGames.length} игр`);
+                        console.log('Отправляемые данные:', dataToSend);
+                        
+                        try {
+                            Telegram.WebApp.sendData(JSON.stringify(dataToSend));
+                            updateDebugInfo('Данные отправлены');
+                            
+                            // Закрываем через небольшую задержку
+                            setTimeout(() => {
+                                Telegram.WebApp.close();
+                            }, 100);
+                            
+                        } catch (error) {
+                            updateDebugInfo(`Ошибка отправки: ${error.message}`);
+                            console.error('Ошибка:', error);
+                        }
+                    } else {
+                        Telegram.WebApp.showAlert("Выберите хотя бы одну игру!");
+                        updateDebugInfo('Показано предупреждение');
+                    }
+                });
             } else {
-                Telegram.WebApp.showAlert("Выберите хотя бы одну игру!");
+                updateDebugInfo('MainButton недоступна');
             }
-        });
+        }
         
         // Первый рендер
         renderGames();
+        updateDebugInfo(`Загружено ${allGames.length} игр`);
     </script>
 </body>
 </html>
