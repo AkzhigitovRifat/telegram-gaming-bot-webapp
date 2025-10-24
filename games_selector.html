@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выбор игр</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .search-container {
+            position: sticky;
+            top: 0;
+            background: var(--tg-theme-bg-color, #ffffff);
+            padding: 10px 0;
+            margin-bottom: 10px;
+            z-index: 100;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--tg-theme-hint-color, #ddd);
+            border-radius: 12px;
+            font-size: 16px;
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            color: var(--tg-theme-text-color, #000);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .search-box:focus {
+            border-color: var(--tg-theme-button-color, #007AFF);
+        }
+        
+        .category-tabs {
+            display: flex;
+            overflow-x: auto;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 4px 0;
+        }
+        
+        .category-tab {
+            flex-shrink: 0;
+            padding: 8px 16px;
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--tg-theme-text-color, #000);
+            transition: all 0.2s;
+        }
+        
+        .category-tab.active {
+            background: var(--tg-theme-button-color, #007AFF);
+            color: var(--tg-theme-button-text-color, white);
+        }
+        
+        .games-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .game-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        
+        .game-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .game-item.selected {
+            background: var(--tg-theme-button-color, #007AFF);
+            color: var(--tg-theme-button-text-color, white);
+        }
+        
+        .game-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            accent-color: var(--tg-theme-button-color, #007AFF);
+        }
+        
+        .game-name {
+            flex: 1;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .game-icon {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+        
+        .selected-counter {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--tg-theme-button-color, #007AFF);
+            color: var(--tg-theme-button-text-color, white);
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            z-index: 1000;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--tg-theme-hint-color, #999);
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">🎮 Выбери свои игры</div>
+    
+    <div class="search-container">
+        <input type="text" class="search-box" placeholder="🔍 Поиск игр..." id="searchInput">
+    </div>
+    
+    <div class="category-tabs" id="categoryTabs"></div>
+    
+    <div class="games-list" id="gamesList"></div>
+    
+    <div class="selected-counter" id="selectedCounter" style="display: none;">
+        Выбрано: <span id="selectedCount">0</span>
+    </div>
+
+    <script>
+        const gamesByCategory = {
+            "🔥 Популярные": [
+                { name: "Counter-Strike 2", icon: "🔫" },
+                { name: "Valorant", icon: "🎯" },
+                { name: "Dota 2", icon: "⚔️" },
+                { name: "League of Legends", icon: "🏆" },
+                { name: "Apex Legends", icon: "🚁" },
+                { name: "PUBG", icon: "🏝️" },
+                { name: "Fortnite", icon: "🏗️" },
+                { name: "Overwatch 2", icon: "🤖" }
+            ],
+            "📱 Мобильные": [
+                { name: "Mobile Legends", icon: "📱" },
+                { name: "Wild Rift", icon: "📱" },
+                { name: "PUBG Mobile", icon: "📱" },
+                { name: "Clash Royale", icon: "👑" },
+                { name: "Clash of Clans", icon: "🏰" },
+                { name: "Brawl Stars", icon: "⭐" },
+                { name: "Free Fire", icon: "🔥" },
+                { name: "Call of Duty Mobile", icon: "📱" },
+                { name: "Arena of Valor", icon: "🛡️" },
+                { name: "Genshin Impact", icon: "🌟" }
+            ],
+            "🎯 Шутеры": [
+                { name: "Counter-Strike 2", icon: "🔫" },
+                { name: "Valorant", icon: "🎯" },
+                { name: "Apex Legends", icon: "🚁" },
+                { name: "Call of Duty", icon: "💥" },
+                { name: "Rainbow Six Siege", icon: "🏢" },
+                { name: "PUBG", icon: "🏝️" },
+                { name: "Overwatch 2", icon: "🤖" },
+                { name: "Destiny 2", icon: "🌌" },
+                { name: "Battlefield", icon: "⚡" }
+            ],
+            "⚔️ MOBA": [
+                { name: "Dota 2", icon: "⚔️" },
+                { name: "League of Legends", icon: "🏆" },
+                { name: "Heroes of the Storm", icon: "🌪️" },
+                { name: "Smite", icon: "⚡" },
+                { name: "Wild Rift", icon: "📱" },
+                { name: "Mobile Legends", icon: "📱" },
+                { name: "Arena of Valor", icon: "🛡️" }
+            ],
+            "🏎️ Гонки": [
+                { name: "Rocket League", icon: "🚗" },
+                { name: "Forza Horizon", icon: "🏁" },
+                { name: "Gran Turismo", icon: "🏎️" },
+                { name: "Need for Speed", icon: "💨" },
+                { name: "F1 2023", icon: "🏁" }
+            ],
+            "🎮 Остальное": [
+                { name: "Minecraft", icon: "🧱" },
+                { name: "Among Us", icon: "👥" },
+                { name: "Fall Guys", icon: "🤸" },
+                { name: "FIFA 24", icon: "⚽" },
+                { name: "NBA 2K24", icon: "🏀" },
+                { name: "Mortal Kombat", icon: "👊" },
+                { name: "Tekken 8", icon: "🥊" },
+                { name: "Street Fighter 6", icon: "🥋" },
+                { name: "World of Warcraft", icon: "🗡️" },
+                { name: "Diablo 4", icon: "😈" }
+            ]
+        };
+        
+        let selectedGames = [];
+        let currentCategory = "🔥 Популярные";
+        let allGames = [];
+        
+        // Создаем плоский список всех игр
+        Object.values(gamesByCategory).forEach(games => {
+            allGames.push(...games);
+        });
+        
+        function renderCategoryTabs() {
+            const tabsContainer = document.getElementById('categoryTabs');
+            tabsContainer.innerHTML = '';
+            
+            Object.keys(gamesByCategory).forEach(category => {
+                const tab = document.createElement('button');
+                tab.className = `category-tab ${category === currentCategory ? 'active' : ''}`;
+                tab.textContent = category;
+                tab.addEventListener('click', () => {
+                    currentCategory = category;
+                    renderCategoryTabs();
+                    renderGames();
+                });
+                tabsContainer.appendChild(tab);
+            });
+        }
+        
+        function renderGames(gamesToRender = null) {
+            const gamesList = document.getElementById('gamesList');
+            gamesList.innerHTML = '';
+            
+            const games = gamesToRender || gamesByCategory[currentCategory] || [];
+            
+            if (games.length === 0) {
+                gamesList.innerHTML = '<div class="no-results">Игры не найдены 😔</div>';
+                return;
+            }
+            
+            games.forEach(game => {
+                const gameItem = document.createElement('div');
+                const isSelected = selectedGames.some(g => g.name === game.name);
+                gameItem.className = `game-item ${isSelected ? 'selected' : ''}`;
+                
+                gameItem.innerHTML = `
+                    <input type="checkbox" class="game-checkbox" ${isSelected ? 'checked' : ''}>
+                    <span class="game-icon">${game.icon}</span>
+                    <span class="game-name">${game.name}</span>
+                `;
+                
+                gameItem.addEventListener('click', () => {
+                    toggleGame(game);
+                });
+                
+                gamesList.appendChild(gameItem);
+            });
+            
+            updateSelectedCounter();
+        }
+        
+        function toggleGame(game) {
+            const index = selectedGames.findIndex(g => g.name === game.name);
+            if (index >= 0) {
+                selectedGames.splice(index, 1);
+            } else {
+                selectedGames.push(game);
+            }
+            renderGames();
+        }
+        
+        function updateSelectedCounter() {
+            const counter = document.getElementById('selectedCounter');
+            const count = document.getElementById('selectedCount');
+            
+            count.textContent = selectedGames.length;
+            
+            if (selectedGames.length > 0) {
+                counter.style.display = 'block';
+            } else {
+                counter.style.display = 'none';
+            }
+        }
+        
+        function searchGames(query) {
+            if (!query.trim()) {
+                renderGames();
+                return;
+            }
+            
+            const filtered = allGames.filter(game => 
+                game.name.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            renderGames(filtered);
+        }
+        
+        // События
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            searchGames(e.target.value);
+        });
+        
+        // Инициализация Telegram Web App
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+        Telegram.WebApp.MainButton.text = "Готово ✅";
+        Telegram.WebApp.MainButton.show();
+        
+        Telegram.WebApp.MainButton.onClick(() => {
+            if (selectedGames.length > 0) {
+                Telegram.WebApp.sendData(JSON.stringify({
+                    type: "games_selected",
+                    games: selectedGames.map(g => g.name)
+                }));
+            } else {
+                Telegram.WebApp.showAlert("Выберите хотя бы одну игру!");
+            }
+        });
+        
+        // Инициализация
+        renderCategoryTabs();
+        renderGames();
+    </script>
+</body>
+</html>
