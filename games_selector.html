@@ -52,31 +52,6 @@
             border-color: var(--tg-theme-button-color, #007AFF);
         }
         
-        .category-tabs {
-            display: flex;
-            overflow-x: auto;
-            gap: 8px;
-            margin-bottom: 16px;
-            padding: 4px 0;
-        }
-        
-        .category-tab {
-            flex-shrink: 0;
-            padding: 8px 16px;
-            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 14px;
-            color: var(--tg-theme-text-color, #000);
-            transition: all 0.2s;
-        }
-        
-        .category-tab.active {
-            background: var(--tg-theme-button-color, #007AFF);
-            color: var(--tg-theme-button-text-color, white);
-        }
-        
         .games-list {
             display: flex;
             flex-direction: column;
@@ -117,11 +92,6 @@
             font-weight: 500;
         }
         
-        .game-icon {
-            margin-right: 8px;
-            font-size: 18px;
-        }
-        
         .selected-counter {
             position: fixed;
             bottom: 20px;
@@ -133,12 +103,6 @@
             font-weight: 600;
             box-shadow: 0 4px 16px rgba(0,0,0,0.2);
             z-index: 1000;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
         }
         
         .no-results {
@@ -150,13 +114,11 @@
     </style>
 </head>
 <body>
-    <div class="header">🎮 Выбери свои игры</div>
+    <div class="header">Выбери свои игры</div>
     
     <div class="search-container">
-        <input type="text" class="search-box" placeholder="🔍 Поиск игр..." id="searchInput">
+        <input type="text" class="search-box" placeholder="Поиск игр..." id="searchInput">
     </div>
-    
-    <div class="category-tabs" id="categoryTabs"></div>
     
     <div class="games-list" id="gamesList"></div>
     
@@ -165,120 +127,77 @@
     </div>
 
     <script>
-        const gamesByCategory = {
-            "🔥 Популярные": [
-                { name: "Counter-Strike 2", icon: "🔫" },
-                { name: "Valorant", icon: "🎯" },
-                { name: "Dota 2", icon: "⚔️" },
-                { name: "League of Legends", icon: "🏆" },
-                { name: "Apex Legends", icon: "🚁" },
-                { name: "PUBG", icon: "🏝️" },
-                { name: "Fortnite", icon: "🏗️" },
-                { name: "Overwatch 2", icon: "🤖" }
-            ],
-            "📱 Мобильные": [
-                { name: "Mobile Legends", icon: "📱" },
-                { name: "Wild Rift", icon: "📱" },
-                { name: "PUBG Mobile", icon: "📱" },
-                { name: "Clash Royale", icon: "👑" },
-                { name: "Clash of Clans", icon: "🏰" },
-                { name: "Brawl Stars", icon: "⭐" },
-                { name: "Free Fire", icon: "🔥" },
-                { name: "Call of Duty Mobile", icon: "📱" },
-                { name: "Arena of Valor", icon: "🛡️" },
-                { name: "Genshin Impact", icon: "🌟" }
-            ],
-            "🎯 Шутеры": [
-                { name: "Counter-Strike 2", icon: "🔫" },
-                { name: "Valorant", icon: "🎯" },
-                { name: "Apex Legends", icon: "🚁" },
-                { name: "Call of Duty", icon: "💥" },
-                { name: "Rainbow Six Siege", icon: "🏢" },
-                { name: "PUBG", icon: "🏝️" },
-                { name: "Overwatch 2", icon: "🤖" },
-                { name: "Destiny 2", icon: "🌌" },
-                { name: "Battlefield", icon: "⚡" }
-            ],
-            "⚔️ MOBA": [
-                { name: "Dota 2", icon: "⚔️" },
-                { name: "League of Legends", icon: "🏆" },
-                { name: "Heroes of the Storm", icon: "🌪️" },
-                { name: "Smite", icon: "⚡" },
-                { name: "Wild Rift", icon: "📱" },
-                { name: "Mobile Legends", icon: "📱" },
-                { name: "Arena of Valor", icon: "🛡️" }
-            ],
-            "🏎️ Гонки": [
-                { name: "Rocket League", icon: "🚗" },
-                { name: "Forza Horizon", icon: "🏁" },
-                { name: "Gran Turismo", icon: "🏎️" },
-                { name: "Need for Speed", icon: "💨" },
-                { name: "F1 2023", icon: "🏁" }
-            ],
-            "🎮 Остальное": [
-                { name: "Minecraft", icon: "🧱" },
-                { name: "Among Us", icon: "👥" },
-                { name: "Fall Guys", icon: "🤸" },
-                { name: "FIFA 24", icon: "⚽" },
-                { name: "NBA 2K24", icon: "🏀" },
-                { name: "Mortal Kombat", icon: "👊" },
-                { name: "Tekken 8", icon: "🥊" },
-                { name: "Street Fighter 6", icon: "🥋" },
-                { name: "World of Warcraft", icon: "🗡️" },
-                { name: "Diablo 4", icon: "😈" }
-            ]
-        };
+        const allGames = [
+            "Counter-Strike 2",
+            "Valorant", 
+            "Dota 2",
+            "League of Legends",
+            "Apex Legends",
+            "PUBG",
+            "Fortnite",
+            "Overwatch 2",
+            "Call of Duty",
+            "Rainbow Six Siege",
+            "Rocket League",
+            "Destiny 2",
+            "Battlefield",
+            "Heroes of the Storm",
+            "Smite",
+            "Mobile Legends",
+            "Wild Rift",
+            "PUBG Mobile",
+            "Clash Royale",
+            "Clash of Clans",
+            "Brawl Stars",
+            "Free Fire",
+            "Call of Duty Mobile",
+            "Arena of Valor",
+            "Genshin Impact",
+            "Honkai Star Rail",
+            "Minecraft",
+            "Among Us",
+            "Fall Guys",
+            "FIFA 24",
+            "NBA 2K24",
+            "Mortal Kombat",
+            "Tekken 8",
+            "Street Fighter 6",
+            "World of Warcraft",
+            "Diablo 4",
+            "Forza Horizon",
+            "Gran Turismo",
+            "Need for Speed",
+            "F1 2023",
+            "Cyberpunk 2077",
+            "GTA V",
+            "Red Dead Redemption 2",
+            "The Witcher 3",
+            "Elden Ring"
+        ].sort(); // Сортируем по алфавиту
         
         let selectedGames = [];
-        let currentCategory = "🔥 Популярные";
-        let allGames = [];
         
-        // Создаем плоский список всех игр
-        Object.values(gamesByCategory).forEach(games => {
-            allGames.push(...games);
-        });
-        
-        function renderCategoryTabs() {
-            const tabsContainer = document.getElementById('categoryTabs');
-            tabsContainer.innerHTML = '';
-            
-            Object.keys(gamesByCategory).forEach(category => {
-                const tab = document.createElement('button');
-                tab.className = `category-tab ${category === currentCategory ? 'active' : ''}`;
-                tab.textContent = category;
-                tab.addEventListener('click', () => {
-                    currentCategory = category;
-                    renderCategoryTabs();
-                    renderGames();
-                });
-                tabsContainer.appendChild(tab);
-            });
-        }
-        
-        function renderGames(gamesToRender = null) {
+        function renderGames(gamesToRender = allGames) {
             const gamesList = document.getElementById('gamesList');
             gamesList.innerHTML = '';
             
-            const games = gamesToRender || gamesByCategory[currentCategory] || [];
-            
-            if (games.length === 0) {
-                gamesList.innerHTML = '<div class="no-results">Игры не найдены 😔</div>';
+            if (gamesToRender.length === 0) {
+                gamesList.innerHTML = '<div class="no-results">Игры не найдены</div>';
                 return;
             }
             
-            games.forEach(game => {
+            gamesToRender.forEach(gameName => {
                 const gameItem = document.createElement('div');
-                const isSelected = selectedGames.some(g => g.name === game.name);
+                const isSelected = selectedGames.includes(gameName);
                 gameItem.className = `game-item ${isSelected ? 'selected' : ''}`;
                 
                 gameItem.innerHTML = `
                     <input type="checkbox" class="game-checkbox" ${isSelected ? 'checked' : ''}>
-                    <span class="game-icon">${game.icon}</span>
-                    <span class="game-name">${game.name}</span>
+                    <span class="game-name">${gameName}</span>
                 `;
                 
                 gameItem.addEventListener('click', () => {
-                    toggleGame(game);
+                    toggleGame(gameName);
                 });
                 
                 gamesList.appendChild(gameItem);
@@ -287,14 +206,19 @@
             updateSelectedCounter();
         }
         
-        function toggleGame(game) {
-            const index = selectedGames.findIndex(g => g.name === game.name);
+        function toggleGame(gameName) {
+            const index = selectedGames.indexOf(gameName);
             if (index >= 0) {
                 selectedGames.splice(index, 1);
             } else {
-                selectedGames.push(game);
+                selectedGames.push(gameName);
             }
-            renderGames();
+            renderGames(getCurrentFilteredGames());
+        }
+        
+        function getCurrentFilteredGames() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            return allGames.filter(game => game.toLowerCase().includes(searchTerm));
         }
         
         function updateSelectedCounter() {
@@ -305,48 +229,42 @@
             
             if (selectedGames.length > 0) {
                 counter.style.display = 'block';
+                // Обновляем текст кнопки
+                Telegram.WebApp.MainButton.text = `Готово (${selectedGames.length})`;
             } else {
                 counter.style.display = 'none';
+                Telegram.WebApp.MainButton.text = "Выберите игры";
             }
         }
         
-        function searchGames(query) {
-            if (!query.trim()) {
-                renderGames();
-                return;
-            }
-            
-            const filtered = allGames.filter(game => 
-                game.name.toLowerCase().includes(query.toLowerCase())
-            );
-            
-            renderGames(filtered);
-        }
-        
-        // События
+        // Поиск
         document.getElementById('searchInput').addEventListener('input', (e) => {
-            searchGames(e.target.value);
+            const filtered = getCurrentFilteredGames();
+            renderGames(filtered);
         });
         
         // Инициализация Telegram Web App
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
-        Telegram.WebApp.MainButton.text = "Готово ✅";
+        
+        // Настройка главной кнопки
+        Telegram.WebApp.MainButton.text = "Выберите игры";
         Telegram.WebApp.MainButton.show();
         
         Telegram.WebApp.MainButton.onClick(() => {
             if (selectedGames.length > 0) {
+                // Отправляем данные и закрываем
                 Telegram.WebApp.sendData(JSON.stringify({
                     type: "games_selected",
-                    games: selectedGames.map(g => g.name)
+                    games: selectedGames
                 }));
+                Telegram.WebApp.close();
             } else {
                 Telegram.WebApp.showAlert("Выберите хотя бы одну игру!");
             }
         });
         
-        // Инициализация
-        renderCategoryTabs();
+        // Первый рендер
         renderGames();
     </script>
 </body>
