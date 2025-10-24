@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        button { padding: 15px; margin: 10px; font-size: 16px; }
+        #info { margin-top: 20px; border: 1px solid #ccc; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🎮 Тест Web App</h1>
+    <button id="testBtn">Отправить тестовые данные</button>
+    
+    <div id="info">Загрузка...</div>
+    
+    <script>
+        const info = document.getElementById('info');
+        
+        function log(message) {
+            info.innerHTML += message + '<br>';
+            console.log(message);
+        }
+        
+        if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+            log('✅ Telegram WebApp найден');
+            
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
+            
+            log('✅ WebApp инициализирован');
+            
+            // Показываем главную кнопку
+            Telegram.WebApp.MainButton.text = "Готово";
+            Telegram.WebApp.MainButton.show();
+            
+            log('✅ Кнопка настроена');
+            
+            // Обработчик главной кнопки
+            Telegram.WebApp.MainButton.onClick(() => {
+                log('🔥 ГЛАВНАЯ КНОПКА НАЖАТА!');
+                
+                const testData = {
+                    type: "games_selected",
+                    games: ["CS2", "Valorant", "Dota 2"],
+                    timestamp: Date.now()
+                };
+                
+                log('📤 Отправляю: ' + JSON.stringify(testData));
+                
+                try {
+                    Telegram.WebApp.sendData(JSON.stringify(testData));
+                    log('✅ Данные отправлены!');
+                    
+                    // Закрываем через секунду
+                    setTimeout(() => {
+                        Telegram.WebApp.close();
+                    }, 1000);
+                    
+                } catch (error) {
+                    log('❌ Ошибка: ' + error.message);
+                }
+            });
+            
+        } else {
+            log('❌ Telegram WebApp НЕ найден!');
+        }
+        
+        // Кнопка для теста
+        document.getElementById('testBtn').onclick = () => {
+            log('🔥 Тестовая кнопка нажата');
+            
+            if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+                const data = {
+                    type: "test",
+                    message: "Тест с кнопки"
+                };
+                
+                Telegram.WebApp.sendData(JSON.stringify(data));
+                log('📤 Тест отправлен');
+            } else {
+                log('❌ Telegram недоступен');
+            }
+        };
+    </script>
+</body>
+</html>
